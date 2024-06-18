@@ -1,0 +1,12 @@
+{
+    "client_id": "https://developer.spotify.com/dashboard",
+    "client_secret": "https://developer.spotify.com/dashboard",
+    "refresh_token": "<start web.js and authorize>",
+    "username": "<mc username>",
+    "proxy_host": "127.0.0.1",
+    "proxy_port": 25565,
+    "target_host": "<mc server host>",
+    "target_port": 25565,
+    "lyrics_auth": "<see: readme.md>",
+    "lyrics_client_token": "<see: readme.md>"
+}
