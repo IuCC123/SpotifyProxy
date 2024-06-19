@@ -4,14 +4,18 @@ Spotify Proxy is a Minecraft Java proxy that lets you sync Spotify lyrics with M
 
 The proxy currently only supports offline mode servers (cracked) servers and not online mode (premium) servers.
 
+## Showcase
+![start command](files/start.mp4)
+![stop command](files/stop.mp4)
+
 ## Get started
 1. Clone the repository using `git clone https://github.com/IuCC123/SpotifyProxy` or download and unzip the respository by clicking the blue **"Code" button**.
 2. Open a terminal inside of the cloned/unzipped folder and run the following command: `npm i`.
 3. Duplicate (copy and paste) **config.json.example** and call it "**config.json**"
 4. Go to [the spotify developer dashboard](https://developer.spotify.com/dashboard) and login with your existing Spotify account.
-5. Once you have logged in, you should see a Dashboard page. Click "**Create app**" on that page to create a new application. ![](screenshots/dashboard.png)
+5. Once you have logged in, you should see a Dashboard page. Click "**Create app**" on that page to create a new application. ![](files/dashboard.png)
 6. Click the newly created application and click the **settings button**.
-![](screenshots/settings.png)
+![](files/settings.png)
 7. Scroll down on the settings page and click the Edit button.
 8. Add **http://localhost:3000/callback** to the Redirect URIs field.
 9. Scroll back to the top and copy your Client ID, put the Client ID in the **client_id** field in the config.json file you created at step 3.
