@@ -87,10 +87,17 @@ async function startLyrics(){
     .then(async function (response) {
         await response.json().then(async function(response){
             currentlyPlaying = response
-            console.log(currentlyPlaying)
             await fetch("https://spclient.wg.spotify.com/color-lyrics/v2/track/"+currentlyPlaying.item.id+"/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b2739565c4df27be4aee5edc8009?format=json&vocalRemoval=false&market=from_token", {
                 "credentials": "include",
                 "headers": {
+                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
+                    "Accept": "application/json",
+                    "Accept-Language": "en",
+                    "app-platform": "WebPlayer",
+                    "spotify-app-version": "1.2.41.162.g8acb5474",
+                    "Sec-Fetch-Dest": "empty",
+                    "Sec-Fetch-Mode": "cors",
+                    "Sec-Fetch-Site": "same-site",
                     "authorization": "Bearer " + config.lyrics_auth,
                     "client-token": config.lyrics_client_token,
                 },
@@ -98,20 +105,28 @@ async function startLyrics(){
                 "mode": "cors"
             })
             .then(async function(res){
-                await res.json().then(function(json){
-                var result = json;
-                result.lyrics.lines.forEach(function(line){
-                    setTimeout(() => {
-                        toShow = {
-                            text: { type: "compound", value: { text: { type: "string", value: line.words }, color: { type: "string", value: "light_purple" }} }
-                        }
-                        serverClient.write('action_bar', toShow);
-                    }, parseInt(line.startTimeMs));
-                })
+                try{
+                    await res.json().then(function(json){
+                        var result = json;
+                        result.lyrics.lines.forEach(function(line){
+                            setTimeout(() => {
+                                toShow = {
+                                    text: { type: "compound", value: { text: { type: "string", value: line.words }, color: { type: "string", value: "light_purple" }} }
+                                }
+                                serverClient.write('action_bar', toShow);
+                            }, parseInt(line.startTimeMs));
+                        })
+                    })
+                }
+                catch(e){
+                    return console.log('Unknown error, try a different song.', res, e)
+                }
             })
             setInterval(() => {
                 if(toShow){
-                    serverClient.write('action_bar', toShow);
+                    if (serverClient.state === states.PLAY && serverClient.state === states.PLAY) {
+                        serverClient.write('action_bar', toShow);
+                    }
                 }
             }, 100);
         })
@@ -119,5 +134,4 @@ async function startLyrics(){
             startLyrics()
         }, currentlyPlaying.item.duration_ms);
     })
-})
 }
