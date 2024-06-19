@@ -5,9 +5,9 @@ Spotify Proxy is a Minecraft Java proxy that lets you sync Spotify lyrics with M
 The proxy currently only supports offline mode servers (cracked) servers and not online mode (premium) servers.
 
 ## Showcase
-![start command](files/start.mp4)
+![Video of the start command](files/start.mp4)
 
-![stop command](files/stop.mp4)
+![Video of the stop command](files/stop.mp4)
 
 ## Get started
 1. Clone the repository using `git clone https://github.com/IuCC123/SpotifyProxy` or download and unzip the respository by clicking the blue **"Code" button**.
