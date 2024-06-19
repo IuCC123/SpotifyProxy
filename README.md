@@ -6,6 +6,7 @@ The proxy currently only supports offline mode servers (cracked) servers and not
 
 ## Showcase
 ![start command](files/start.mp4)
+
 ![stop command](files/stop.mp4)
 
 ## Get started
