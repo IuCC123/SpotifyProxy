@@ -6,10 +6,9 @@ The proxy currently only supports offline mode servers (cracked) servers and not
 
 ## Showcase
 
-https://github.com/IuCC123/SpotifyProxy/assets/80768059/d8c56a3b-35af-4352-9115-842cee3d0ef8
+https://github.com/IuCC123/SpotifyProxy/assets/80768059/bc7f8d0c-9ebe-46f8-8664-29c8a380cd69
 
-https://github.com/IuCC123/SpotifyProxy/assets/80768059/0ba56b28-c628-452a-bb7c-3c370339b6ef
-
+https://github.com/IuCC123/SpotifyProxy/assets/80768059/9bbf019b-41eb-48de-b614-0e0a99553068
 
 ## Get started
 1. Clone the repository using `git clone https://github.com/IuCC123/SpotifyProxy` or download and unzip the respository by clicking the blue **"Code" button**.
