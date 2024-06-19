@@ -22,6 +22,10 @@ The proxy currently only supports offline mode servers (cracked) servers and not
 13. **Copy your Refresh token** that the web application returns once you have authorized. Put this token in the **refresh_token** field in config.json
 14. Now you can edit the config.json file to your likings.
 15. Run `node .` and follow the steps sent in the console.
-16. Once ingame, send "**!start**" in the chat and wait for the first lyric, it should appear if you synced it correctly (**_make sure to run !start at the same time as you start the Spotify song, at 0:00_**).
+16. Once ingame, send "**!start**" in the chat and wait for the first lyric, it should appear if the song you're playing has synced lyrics.
+
+List of commands:
+- !start
+- !stop
 
 > If you need any help, you can always contact me by DMing me on Discord (username: **iucc.**)

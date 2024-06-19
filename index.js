@@ -5,6 +5,8 @@ const http = require('https');
 const fs = require('fs');
 const config = require('./config.json');
 
+var interv = [];
+
 var serverClient;
 var toShow;
 var accessToken;
@@ -59,7 +61,6 @@ server.on("playerJoin", function(player){
     })
     serverClient.on('packet', function(data, meta){
         if (serverClient.state === states.PLAY && meta.state === states.PLAY) {
-            client.write(meta.name, data)
             if(meta.name == 'chat_message'){
                 if(data.message.startsWith('!')){
                     if(data.message == "!start"){
@@ -67,8 +68,21 @@ server.on("playerJoin", function(player){
                         console.log('Lyrics started, make sure its synced correctly!')
                         return;
                     }
+                    if(data.message == "!stop"){
+                        interv.forEach(function(interval){
+                            try{
+                                clearInterval(interval)
+                            }
+                            catch{
+                                clearTimeout(interval)
+                            }
+                        })
+                        return;
+                    }
+                    
                 }
             }
+            client.write(meta.name, data)
         }
     })
 })
@@ -85,48 +99,58 @@ async function startLyrics(){
         redirect: "follow"
     };
 
-    await fetch("https://api.spotify.com/v1/me/player/currently-playing", requestOptions)
-    .then(async function (response) {
-        await response.json().then(async function(response){
-            currentlyPlaying = response
-            var artists = [];
-            currentlyPlaying.item.artists.forEach(function(artist){
-                artists.push(artist.name)
-            })
-            toShow = {
-                text: { type: "compound", value: { text: { type: "string", value: "Now syncing " + currentlyPlaying.item.name + " by: " + artists.join(', ') }, color: { type: "string", value: "light_purple" }} }
-            }
-            serverClient.write('action_bar', toShow);
-            download("https://spotify-lyrics-api-pi.vercel.app/?trackid=" + currentlyPlaying.item.id + "&format=lrc", "lyrics.lrc", async function(){
-                try{
-                    var lyrics = fs.readFileSync('lyrics.lrc', 'utf-8');
-                    JSON.parse(lyrics).lines.forEach(function(line){
-                        var minutes = line.timeTag.split(':')[0]
-                        var seconds = line.timeTag.split(':')[1]
-                        var ms = minutes*60000 + seconds*1000
-                        setTimeout(() => {
-                            toShow = {
-                                text: { type: "compound", value: { text: { type: "string", value: line.words }, color: { type: "string", value: "light_purple" }} }
-                            }
-                            serverClient.write('action_bar', toShow);
-                        }, ms);
+    const requestOptionsSeek = {
+        method: "PUT",
+        headers: myHeaders,
+        redirect: "follow"
+    };
+    
+    await fetch("https://api.spotify.com/v1/me/player/play", requestOptions).then(async () => {
+        await fetch("https://api.spotify.com/v1/me/player/seek?position_ms=0", requestOptionsSeek).then(async () => {
+            await fetch("https://api.spotify.com/v1/me/player/currently-playing", requestOptions)
+            .then(async function (response) {
+                await response.json().then(async function(response){
+                    currentlyPlaying = response
+                    var artists = [];
+                    currentlyPlaying.item.artists.forEach(function(artist){
+                        artists.push(artist.name)
                     })
-                }
-                catch(e){
-                    return console.log('Unknown error, try a different song.', e)
-                }
-            })
-            setInterval(() => {
-                if(toShow){
-                    if (serverClient.state === states.PLAY && serverClient.state === states.PLAY) {
-                        serverClient.write('action_bar', toShow);
+                    toShow = {
+                        text: { type: "compound", value: { text: { type: "string", value: "Now syncing " + currentlyPlaying.item.name + " by: " + artists.join(', ') }, color: { type: "string", value: "light_purple" }} }
                     }
-                }
-            }, 100);
+                    serverClient.write('action_bar', toShow);
+                    download("https://spotify-lyrics-api-pi.vercel.app/?trackid=" + currentlyPlaying.item.id + "&format=lrc", "lyrics.lrc", async function(){
+                        try{
+                            var lyrics = fs.readFileSync('lyrics.lrc', 'utf-8');
+                            JSON.parse(lyrics).lines.forEach(function(line){
+                                var minutes = line.timeTag.split(':')[0]
+                                var seconds = line.timeTag.split(':')[1]
+                                var ms = minutes*60000 + seconds*1000
+                                interv.push(setTimeout(() => {
+                                    toShow = {
+                                        text: { type: "compound", value: { text: { type: "string", value: line.words }, color: { type: "string", value: "light_purple" }} }
+                                    }
+                                    serverClient.write('action_bar', toShow);
+                                }, ms-100));
+                            })
+                        }
+                        catch(e){
+                            return console.log('Unknown error, try a different song.', e)
+                        }
+                    })
+                    interv.push(setInterval(() => {
+                        if(toShow){
+                            if (serverClient.state === states.PLAY && serverClient.state === states.PLAY) {
+                                serverClient.write('action_bar', toShow);
+                            }
+                        }
+                    }, 100));
+                })
+                interv.push(setTimeout(() => {
+                    startLyrics()
+                }, currentlyPlaying.item.duration_ms));
+            })
         })
-        setTimeout(() => {
-            startLyrics()
-        }, currentlyPlaying.item.duration_ms);
     })
 }
 
