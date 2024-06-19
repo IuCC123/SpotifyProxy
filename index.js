@@ -1,6 +1,8 @@
 const nmp = require('minecraft-protocol');
 const states = nmp.states;
 const request = require("request");
+const http = require('https');
+const fs = require('fs');
 const config = require('./config.json');
 
 var serverClient;
@@ -87,39 +89,31 @@ async function startLyrics(){
     .then(async function (response) {
         await response.json().then(async function(response){
             currentlyPlaying = response
-            await fetch("https://spclient.wg.spotify.com/color-lyrics/v2/track/"+currentlyPlaying.item.id+"/image/https%3A%2F%2Fi.scdn.co%2Fimage%2Fab67616d0000b2739565c4df27be4aee5edc8009?format=json&vocalRemoval=false&market=from_token", {
-                "credentials": "include",
-                "headers": {
-                    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0",
-                    "Accept": "application/json",
-                    "Accept-Language": "en",
-                    "app-platform": "WebPlayer",
-                    "spotify-app-version": "1.2.41.162.g8acb5474",
-                    "Sec-Fetch-Dest": "empty",
-                    "Sec-Fetch-Mode": "cors",
-                    "Sec-Fetch-Site": "same-site",
-                    "authorization": "Bearer " + config.lyrics_auth,
-                    "client-token": config.lyrics_client_token,
-                },
-                "method": "GET",
-                "mode": "cors"
+            var artists = [];
+            currentlyPlaying.item.artists.forEach(function(artist){
+                artists.push(artist.name)
             })
-            .then(async function(res){
+            toShow = {
+                text: { type: "compound", value: { text: { type: "string", value: "Now syncing " + currentlyPlaying.item.name + " by: " + artists.join(', ') }, color: { type: "string", value: "light_purple" }} }
+            }
+            serverClient.write('action_bar', toShow);
+            download("https://spotify-lyrics-api-pi.vercel.app/?trackid=" + currentlyPlaying.item.id + "&format=lrc", "lyrics.lrc", async function(){
                 try{
-                    await res.json().then(function(json){
-                        var result = json;
-                        result.lyrics.lines.forEach(function(line){
-                            setTimeout(() => {
-                                toShow = {
-                                    text: { type: "compound", value: { text: { type: "string", value: line.words }, color: { type: "string", value: "light_purple" }} }
-                                }
-                                serverClient.write('action_bar', toShow);
-                            }, parseInt(line.startTimeMs));
-                        })
+                    var lyrics = fs.readFileSync('lyrics.lrc', 'utf-8');
+                    JSON.parse(lyrics).lines.forEach(function(line){
+                        var minutes = line.timeTag.split(':')[0]
+                        var seconds = line.timeTag.split(':')[1]
+                        var ms = minutes*60000 + seconds*1000
+                        setTimeout(() => {
+                            toShow = {
+                                text: { type: "compound", value: { text: { type: "string", value: line.words }, color: { type: "string", value: "light_purple" }} }
+                            }
+                            serverClient.write('action_bar', toShow);
+                        }, ms);
                     })
                 }
                 catch(e){
-                    return console.log('Unknown error, try a different song.', res, e)
+                    return console.log('Unknown error, try a different song.', e)
                 }
             })
             setInterval(() => {
@@ -135,3 +129,24 @@ async function startLyrics(){
         }, currentlyPlaying.item.duration_ms);
     })
 }
+
+const download = (url, dest, cb) => {
+    const file = fs.createWriteStream(dest);
+
+    const request = http.get(url, (response) => {
+        if (response.statusCode !== 200) {
+            return cb('Response status was ' + response.statusCode);
+        }
+        response.pipe(file);
+    });
+
+    file.on('finish', () => file.close(cb));
+
+    request.on('error', (err) => {
+        fs.unlink(dest, () => cb(err.message));
+    });
+
+    file.on('error', (err) => {
+        fs.unlink(dest, () => cb(err.message));
+    });
+};
